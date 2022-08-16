@@ -1,10 +1,10 @@
 # ezty: Zero-fuss Any-thing
 
-`Ty`: `TypeId`, but more useful & versatile
+`ezty::Ty`: `TypeId`, but has a useful `Debug` impl.
 
-`AnyDebug`: `Any`, but `Debug`
+`ezty::AnyDebug`: `Any`, but `Debug`
 
-`type_name`: `std:type_name`, but clean
+`ezty::type_name`: `std:type_name`, but clean
 
 
 # License
