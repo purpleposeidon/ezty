@@ -5,3 +5,8 @@
 `AnyDebug`: `Any`, but `Debug`
 
 `type_name`: `std:type_name`, but clean
+
+
+# License
+
+Apache/MIT
