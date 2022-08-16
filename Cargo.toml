@@ -1,0 +1,27 @@
+[package]
+name = "ezty"
+version = "0.1.0"
+edition = "2021"
+authors = ["neptunepink <purpleposeidon@gmail.com>"]
+
+description = "Zero-fuss Any-thing"
+repository = "https://github.com/purpleposeidon/ezty"
+keywords = ["any", "typeid", "fmt", "type_name"]
+categories = ["development-tools::debugging", "value-formatting"]
+readme = "README.md"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+
+[badges]
+maintenance = { status = "passively-maintained" }
+
+
+
+[dependencies]
+mopa = { version = "0.2", optional = true }
+
+[features]
+default = ["any_debug"]
+any_debug = ["dep:mopa"]
+layout = []
