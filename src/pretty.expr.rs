@@ -10,6 +10,7 @@
     ("alloc::vec::", "Vec"),
     ("core::cell::", "Cell"),
     ("core::cell::", "RefCell"),
+    ("core::option::", "Option"),
     ("core::result::", "Result"),
     ("std::collections::hash::map::", "HashMap"),
     ("std::collections::hash::set::", "HashSet"),
