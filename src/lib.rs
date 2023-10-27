@@ -134,6 +134,7 @@ mod any_debug {
 pub use self::any_debug::AnyDebug;
 
 /// Just like [`Ty`] but it also includes [`Layout`] information.
+#[derive(Clone, Eq, PartialEq)]
 pub struct LTy {
     ty: Ty,
     layout: Layout,
