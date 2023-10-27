@@ -7,8 +7,7 @@ pub fn pretty(name: &str) -> &str {
     // FIXME(rust): This can be const once type_name is.
     let pretty = include!("pretty.expr.rs");
     for &(bad, good) in pretty {
-        if name.starts_with(bad) {
-            let name = &name[bad.len()..];
+        if let Some(name) = name.strip_prefix(bad) {
             if name.starts_with(good) {
                 return name;
             }

@@ -3,7 +3,7 @@ use super::{type_name, Ty};
 
 /// Like [`Any`](std::any::Any), but with [`Debug`], [`Send`], & [`Sync`].
 pub trait AnyDebug: mopa::Any + fmt::Debug + Send + Sync {
-    fn type_name<'a>(&'a self) -> &'static str {
+    fn type_name(&self) -> &'static str {
         type_name::<Self>()
     }
     fn get_ty(&self) -> Ty;
