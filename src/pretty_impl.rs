@@ -1,6 +1,6 @@
 /// Strips std path-noise from [`type_name()`](std::any::type_name).
 ///
-/// You can customize the behavior by using a [cargo patch]. 
+/// You can customize the behavior by using a [cargo patch].
 ///
 /// [cargo patch]: https://doc.rust-lang.org/cargo/reference/overriding-dependencies.html?#the-patch-section
 pub fn pretty(name: &str) -> &str {

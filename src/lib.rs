@@ -1,8 +1,8 @@
 //! Zero-fuss Any-tools.
 //!
-//! There's only two types exposed here that you're going to be interested in:
-//! * [`Ty`], a nicer `TypeId`
-//! * [`AnyDebug`], a nicer `Any`
+//! The most interesting things this crate provides are:
+//! * [`Ty`], a nicer [`std:TypeId`](`StdTypeId`)
+//! * [`AnyDebug`], a nicer [`Any`](`std::any::Any`)
 
 #[cfg(feature = "any_debug")]
 #[macro_use]
@@ -12,28 +12,36 @@ use std::fmt;
 use std::any::TypeId as StdTypeId;
 use std::hash;
 use std::cmp::Ordering;
-#[cfg(feature = "layout")]
 use std::alloc::Layout;
 
-/// A nicer `TypeId`.
+/// A nicer [`std:TypeId`](`StdTypeId`).
 ///
 /// 1. Shorter name.
 /// 2. Improved [`Debug`](fmt::Debug) impl.
 /// 3. Option for non-`'static` types.
-/// 4. Knows its [layout](std::alloc::Layout) (if you enable the `layout` feature).
 #[derive(Copy, Clone, Eq)]
 pub struct Ty {
     id: TypeId,
     // fn() is half the size of a &str
     name: fn() -> &'static str,
-    #[cfg(feature = "layout")]
-    layout: Layout,
+}
+impl Ty {
+    pub fn of<T: ?Sized + 'static>() -> Ty {
+        Ty {
+            id: TypeId::of::<T>(),
+            name: type_name::<T>,
+        }
+    }
+    pub fn of_every<T: ?Sized>() -> Ty {
+        Ty {
+            id: TypeId::of_every::<T>(),
+            name: type_name::<T>,
+        }
+    }
 }
 impl Ty {
     pub fn name(&self) -> &'static str { (self.name)() }
     pub fn id(&self) -> TypeId { self.id }
-    #[cfg(feature = "layout")]
-    pub fn layout(&self) -> Layout { self.layout }
 }
 impl hash::Hash for Ty {
     fn hash<H: hash::Hasher>(&self, state: &mut H) {
@@ -55,31 +63,13 @@ impl PartialOrd for Ty {
         self.id.partial_cmp(&other.id)
     }
 }
-impl Ty {
-    pub fn of<T: 'static>() -> Ty {
-        Ty {
-            id: TypeId::of::<T>(),
-            name: type_name::<T>,
-            #[cfg(feature = "layout")]
-            layout: Layout::new::<T>(),
-        }
-    }
-    pub fn of_every<T>() -> Ty {
-        Ty {
-            id: TypeId::of_every::<T>(),
-            name: type_name::<T>,
-            #[cfg(feature = "layout")]
-            layout: Layout::new::<T>(),
-        }
-    }
-}
 impl fmt::Debug for Ty {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "{}", (self.name)())
     }
 }
 
-/// Either a [`std:TypeId`](std::any::TypeId) or a non-`'static` [`ezty:TypeId`](TypeId).
+/// Either a [`std:TypeId`](std::any::TypeId) or a non-`'static` [`ezty:NonStaticTypeId`](NonStaticTypeId).
 ///
 /// Note that `Ty::of::<T>() != Ty::of_every::<T>()`.
 #[derive(Copy, Clone, PartialEq, Eq, Ord, PartialOrd, Hash)]
@@ -88,12 +78,14 @@ pub enum TypeId {
     NonStatic(NonStaticTypeId),
 }
 impl TypeId {
-    pub fn of<T: 'static>() -> Self {
+    pub fn of<T: ?Sized + 'static>() -> Self {
         Self::Std(StdTypeId::of::<T>())
     }
-    pub fn of_every<T>() -> Self {
+    pub fn of_every<T: ?Sized>() -> Self {
         Self::NonStatic(NonStaticTypeId::of::<T>())
     }
+}
+impl TypeId {
     pub fn std(&self) -> Option<StdTypeId> {
         if let &Self::Std(t) = self {
             Some(t)
@@ -116,7 +108,7 @@ impl TypeId {
 #[derive(Copy, Clone, PartialEq, Eq, Ord, PartialOrd, Hash)]
 pub struct NonStaticTypeId(usize);
 impl NonStaticTypeId {
-    pub fn of<T>() -> Self {
+    pub fn of<T: ?Sized>() -> Self {
         Self(Self::of::<T> as usize)
     }
 }
@@ -141,6 +133,37 @@ mod any_debug {
 }
 pub use self::any_debug::AnyDebug;
 
+/// Just like [`Ty`] but it also includes [`Layout`] information.
+pub struct LTy {
+    ty: Ty,
+    layout: Layout,
+}
+impl fmt::Debug for LTy {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "{}", (self.ty.name)())
+    }
+}
+impl LTy {
+    pub fn of<T: 'static>() -> LTy {
+        LTy {
+            ty: Ty::of::<T>(),
+            layout: Layout::new::<T>(),
+        }
+    }
+    pub fn of_every<T>() -> LTy {
+        LTy {
+            ty: Ty::of_every::<T>(),
+            layout: Layout::new::<T>(),
+        }
+    }
+}
+impl LTy {
+    pub fn ty(&self) -> Ty { self.ty }
+    pub fn layout(&self) -> Layout { self.layout }
+    pub fn name(&self) -> &'static str { (self.ty.name)() }
+    pub fn id(&self) -> TypeId { self.ty.id() }
+}
+
 #[cfg(test)]
 mod tests {
     use super::Ty;
@@ -163,6 +186,20 @@ mod tests {
     fn pretty() {
         let a = Ty::of::<Vec<i32>>();
         let a = format!("{:?}", a);
+        println!("{}", a);
         assert_eq!(a, "Vec<i32>");
+
+        let a = Ty::of::<Vec<Ty>>();
+        let a = format!("{:?}", a);
+        println!("{}", a);
+    }
+
+    #[test]
+    fn less_pretty() {
+        // FIXME: pretty should return a String.
+        let a = Ty::of::<Vec<Vec<u8>>>();
+        let a = format!("{:?}", a);
+        println!("{}", a);
+        assert_eq!(a, "Vec<Vec<u8>>");
     }
 }
